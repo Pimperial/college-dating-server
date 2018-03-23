@@ -1,0 +1,6 @@
+cp app.js dist/
+cp schema.js dist/
+cp package.json dist/
+cp -r static dist/
+cp -r src dist/
+scp -i ~/.ssh/aiko-api.pem -r dist/* $AIKO:~/pimperial/
