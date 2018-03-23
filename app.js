@@ -1,12 +1,19 @@
 ////////////////////////////////////////////////////////////////////
-// HTTPS
+// Networking
 /* const https = require('https')
 const fs = require('fs')
 const options = {
     cert: fs.readFileSync('/etc/letsencrypt/live/aiko.ml/fullchain.pem'),
     key: fs.readFileSync('/etc/letsencrypt/live/aiko.ml/privkey.pem')
 } */
+var fetch = require('node-fetch')
 ////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
+// Config
+var config = require('./secret.js')
+////////////////////////////////////////////////////////////////////
+
 
 ////////////////////////////////////////////////////////////////////
 // Email
@@ -21,7 +28,8 @@ var crypto = require('crypto')
 var schema = require('./schema.js')
 var User = schema.userModel
 
-mongoose.connect('mongodb://127.0.0.1/ic-date')
+// mongoose.connect('mongodb://127.0.0.1/ic-date')
+mongoose.connect(`mongodb://${config.db.user}:${config.db.pass}@${config.db.url}`)
 mongoose.connection.on('error', (e) => {
     console.log("An error occurred while connecting:")
     console.log(e)
@@ -126,12 +134,13 @@ var verifyPerson = (code, cb) => {
 
 var verifyEmail = (code, token) => {
     sendmail({
-        from: 'no-reply@xn--gi8h6vaa.ws',
+        from: 'no-reply@pimperial.now.sh',
         to: `${code}@ic.ac.uk`,
         subject: 'Verify your Email Address for Pimperial',
         html: `Your special token is: <br /><br /><h1>${token}</h1>`,
     }, function (e, p) {
         console.log(e && e.stack)
+        console.log(`Sent email to ${code}@ic.ac.uk`)
         console.dir(p)
     })
 }
@@ -186,10 +195,24 @@ var info = (code, cb) => {
 // Routes
 //////////////////////////////////////
 // Verification
-app.all('/verify/:code', (q, s) => {
+app.post('/verify/:code', (q, s) => {
     verifyPerson(q.params.code, (c) => {
         if (c) s.send(c)
         else s.sendStatus(500)
+    })
+})
+
+app.post('/login/:code', (q, s) => {
+    login(q.params.code, (ret) => {
+        if (ret) s.sendStatus(200)
+        else s.sendStatus(403)
+    })
+})
+
+app.post('/who/is/:code', (q, s) => {
+    info(q.params.code, (i) => {
+        if (i) s.json(i)
+        else s.sendStatus(403)
     })
 })
 //////////////////////////////////////

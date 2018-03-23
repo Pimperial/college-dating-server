@@ -1,5 +1,7 @@
 *.pyc
 secret/*
+secret.js
+dist/*
 db/*
 *.config
 node_modules/*

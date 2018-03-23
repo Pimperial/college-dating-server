@@ -6,7 +6,8 @@
     "scripts": {
       "start": "node app.js",
       "run": "node app.js",
-      "test": "node app.js"
+      "test": "node app.js",
+      "serve": "./serve"
     },
     "author": "Priansh Shah",
     "license": "ISC",
