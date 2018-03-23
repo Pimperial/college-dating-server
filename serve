@@ -1,5 +1,6 @@
 cp app.js dist/
 cp schema.js dist/
+cp secret.js dist/
 cp package.json dist/
 cp -r static dist/
 cp -r src dist/
