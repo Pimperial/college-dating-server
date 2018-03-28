@@ -160,7 +160,9 @@ var login = (code, cb) => {
                     name: d.name,
                     campus: d.campus,
                     student: d.student,
-                    course: d.course
+                    course: d.course,
+                    degree: d.degree,
+                    email: d.email
                 })).save((e) => {
                     if (e) cb(false)
                     else cb(true)
@@ -183,7 +185,9 @@ var info = (code, cb) => {
             name: s.name,
             campus: s.campus,
             student: s.student,
-            course: s.course
+            course: s.course,
+            degree: s.degree,
+            email: s.email
         })
         else cb(null)
     })

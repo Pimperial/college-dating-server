@@ -6,6 +6,8 @@ var UserSchema = new mongoose.Schema({
     campus: String,
     student: Boolean,
     course: String,
+    degree: String,
+    email: String
 })
 
 var ReferralSchema = new mongoose.Schema({
