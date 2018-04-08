@@ -7,7 +7,11 @@ var UserSchema = new mongoose.Schema({
     student: Boolean,
     course: String,
     degree: String,
-    email: String
+    email: String,
+    pics: [{
+        type: String
+    }],
+    bio: String
 })
 
 var ReferralSchema = new mongoose.Schema({

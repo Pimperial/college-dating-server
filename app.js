@@ -108,6 +108,7 @@ var express = require('express')
 app = express()
 
 app.use(require('cors')())
+app.use(require('body-parser').json())
 app.use(require('helmet')())
 app.use(require('express-htaccess-middleware')({
     file: require('path').resolve(__dirname, 'static/.htaccess'),
@@ -162,7 +163,8 @@ var login = (code, cb) => {
                     student: d.student,
                     course: d.course,
                     degree: d.degree,
-                    email: d.email
+                    email: d.email,
+                    bio: d.bio
                 })).save((e) => {
                     if (e) cb(false)
                     else cb(true)
@@ -187,9 +189,37 @@ var info = (code, cb) => {
             student: s.student,
             course: s.course,
             degree: s.degree,
-            email: s.email
+            email: s.email,
+            bio: s.bio
         })
         else cb(null)
+    })
+}
+
+var bio = (code, b, cb) => {
+    User.findOne({
+        code: code
+    }, (e, s) => {
+        if (e) cb(e)
+        else if (s) {
+            s.bio = b
+            console.log(b)
+            s.save((e) => cb(e))
+        }
+        else cb('User doesn\'t exist!')
+    })
+}
+
+var pic = (code, b, cb) => {
+    User.findOne({
+        code: code
+    }, (e, s) => {
+        if (e) cb(e)
+        else if (s) {
+            // TODO: save image to S3, add URL to ppic string
+            cb(null)
+        }
+        else cb('User doesn\'t exist!')
     })
 }
 ////////////////////////////////////////////////////////////////////
@@ -215,8 +245,25 @@ app.post('/login/:code', (q, s) => {
 
 app.post('/who/is/:code', (q, s) => {
     info(q.params.code, (i) => {
-        if (i) s.json(i)
+        if (i) {
+            console.log(i)
+            s.json(i)
+        }
         else s.sendStatus(403)
+    })
+})
+
+app.post('/api/:code/bio', (q, s) => {
+    bio(q.params.code, q.body.description, (e) => {
+        if (e) s.sendStatus(403)
+        else s.sendStatus(200)
+    })
+})
+
+app.post('/api/:code/propic', (q, s) => {
+    bio(q.params.code, q.body.pic, (e) => {
+        if (e) s.sendStatus(403)
+        else s.sendStatus(200)
     })
 })
 //////////////////////////////////////
