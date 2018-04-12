@@ -38,6 +38,30 @@ mongoose.connection.on('error', (e) => {
 ////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
+// AWS S3
+var AWS = require('aws-sdk')
+
+var s3 = new AWS.S3()
+AWS.config.region = 'us-east-1'
+
+var opts = {
+    Bucket: 'pimperial-pimps',
+    Expires: 60,
+    ACL: 'public-read'
+}
+
+var upload_url = (c, fn, t, cb) => {
+    const n = c + '-' + fn.split('/').reduceRight(_ => _)
+    let o = Object.assign({
+        Key: n,
+        ContentType: t
+    }, opts)
+    s3.getSignedUrl('putObject', o,
+        (e, d) => cb(e ? null : d))
+}
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 // Referrals
 var Ref = schema.refModel
 
@@ -205,21 +229,18 @@ var bio = (code, b, cb) => {
             s.bio = b
             console.log(b)
             s.save((e) => cb(e))
-        }
-        else cb('User doesn\'t exist!')
+        } else cb('User doesn\'t exist!')
     })
 }
 
-var pic = (code, b, cb) => {
+var pic = (code, fn, t, cb) => {
     User.findOne({
         code: code
     }, (e, s) => {
         if (e) cb(e)
-        else if (s) {
-            // TODO: save image to S3, add URL to ppic string
-            cb(null)
-        }
-        else cb('User doesn\'t exist!')
+        else if (s) upload_url(code, fn, t,
+            (u) => cb(u ? null : 'Couldn\'t save to S3!', u))
+        else cb('User doesn\'t exist!', null)
     })
 }
 ////////////////////////////////////////////////////////////////////
@@ -248,11 +269,12 @@ app.post('/who/is/:code', (q, s) => {
         if (i) {
             console.log(i)
             s.json(i)
-        }
-        else s.sendStatus(403)
+        } else s.sendStatus(403)
     })
 })
-
+//////////////////////////////////////
+//////////////////////////////////////
+// API
 app.post('/api/:code/bio', (q, s) => {
     bio(q.params.code, q.body.description, (e) => {
         if (e) s.sendStatus(403)
@@ -261,9 +283,9 @@ app.post('/api/:code/bio', (q, s) => {
 })
 
 app.post('/api/:code/propic', (q, s) => {
-    bio(q.params.code, q.body.pic, (e) => {
+    pic(q.params.code, q.body.filename, q.body.filetype, (e, u) => {
         if (e) s.sendStatus(403)
-        else s.sendStatus(200)
+        else s.send(u)
     })
 })
 //////////////////////////////////////
