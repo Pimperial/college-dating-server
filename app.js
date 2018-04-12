@@ -57,7 +57,10 @@ var upload_url = (c, fn, t, cb) => {
         ContentType: t
     }, opts)
     s3.getSignedUrl('putObject', o,
-        (e, d) => cb(e ? null : d))
+        (e, d) => cb(e ? null : {
+            signed: d,
+            final: `https://${o.Bucket}.s3.amazonaws.com/${o.Key}`
+        }))
 }
 ////////////////////////////////////////////////////////////////////
 
@@ -214,7 +217,8 @@ var info = (code, cb) => {
             course: s.course,
             degree: s.degree,
             email: s.email,
-            bio: s.bio
+            bio: s.bio,
+            pics: s.pics
         })
         else cb(null)
     })
@@ -241,6 +245,19 @@ var pic = (code, fn, t, cb) => {
         else if (s) upload_url(code, fn, t,
             (u) => cb(u ? null : 'Couldn\'t save to S3!', u))
         else cb('User doesn\'t exist!', null)
+    })
+}
+
+var update_pics = (code, pus, cb) => {
+    User.findOne({
+        code: code
+    }, (e, s) => {
+        if (e) cb(e)
+        else if (s) {
+            s.pics = pus
+            console.log(pus)
+            s.save((e) => cb(e))
+        } else cb('User doesn\'t exist!')
     })
 }
 ////////////////////////////////////////////////////////////////////
@@ -285,7 +302,14 @@ app.post('/api/:code/bio', (q, s) => {
 app.post('/api/:code/propic', (q, s) => {
     pic(q.params.code, q.body.filename, q.body.filetype, (e, u) => {
         if (e) s.sendStatus(403)
-        else s.send(u)
+        else s.json(u)
+    })
+})
+
+app.post('/api/:code/pics', (q, s) => {
+    update_pics(q.params.code, q.body.pics, (e) => {
+        if (e) s.sendStatus(403)
+        else s.sendStatus(200)
     })
 })
 //////////////////////////////////////
